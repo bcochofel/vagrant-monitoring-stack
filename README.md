@@ -1,5 +1,8 @@
 # Monitoring Stack
 
+[![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)
+[![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/bcochofel/vagrant-monitoring-stack)](https://github.com/bcochofel/vagrant-monitoring-stack/tags)
+
 This project deploys, using vagrant, servers with Prometheus, Telegraf, M3DB, Grafana, and some more components.
 
 This can be used to test configurations for both Prometheus and Grafana.
