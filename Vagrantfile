@@ -251,7 +251,7 @@ managers = [
 
 # Monitoring Servers
 servers = [
-  { :hostname => 'mon-1', :ip => '192.168.77.10', :ram => 1024, :cpus => 2, :box => "bento/centos-7.7" }
+  { :hostname => 'mon-1', :ip => '192.168.77.10', :ram => 1024, :cpus => 2, :box => "bento/centos-7.7" },
   { :hostname => 'mon-2', :ip => '192.168.77.20', :ram => 1024, :cpus => 2, :box => "bento/centos-7.7" }
 ]
 
