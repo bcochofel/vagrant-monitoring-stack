@@ -335,6 +335,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       if server[:hostname] == "mon-1"
         config.vm.provision "shell", inline: $mon1
       end
+      # Configure monitoring stack for mon-2
+      if server[:hostname] == "mon-2"
+        config.vm.provision "shell", inline: $mon2
+      end
     end
   end
 end
