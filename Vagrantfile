@@ -70,7 +70,7 @@ $mon1 = <<-SCRIPT
 sudo yum -y install epel-release
 sudo yum -y install python-pip
 sudo yum -y install python-devel
-sudo yum -y install wget curl
+sudo yum -y install wget curl stress
 sudo pip install --upgrade pip
 sudo pip install jsondiff
 sudo pip install pyyamlA
@@ -200,12 +200,13 @@ $mon2 = <<-SCRIPT
 sudo yum -y install epel-release
 sudo yum -y install python-pip
 sudo yum -y install python-devel
-sudo yum -y install wget curl
+sudo yum -y install wget curl stress
 sudo pip install --upgrade pip
 sudo pip install jsondiff
 sudo pip install pyyamlA
 
 # install node_exporter
+sudo useradd --no-create-home --shell /bin/false prometheus
 export NODE_EXPORTER_VERSION=0.18.1
 wget -q https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz
 tar -xzf node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz
