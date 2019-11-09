@@ -10,7 +10,7 @@ VAGRANTFILE_API_VERSION = "2"
 TELEGRAF_VERSION = "1.12.4"
 
 # Script to get M3DB + Grafana
-$script1 = <<-SCRIPT
+$manager = <<-SCRIPT
 # m3db docker
 docker pull quay.io/m3db/m3dbnode:latest
 docker run -d -p 7201:7201 -p 7203:7203 -p 9003:9003 \
@@ -65,8 +65,8 @@ sudo systemctl start grafana-server
 sudo systemctl enable grafana-server.service
 SCRIPT
 
-# Script to configure servers
-$script2 = <<-SCRIPT
+# Script to configure server mon-1
+$mon1 = <<-SCRIPT
 sudo yum -y install epel-release
 sudo yum -y install python-pip
 sudo yum -y install python-devel
@@ -122,11 +122,11 @@ scrape_configs:
 
   - job_name: 'node_exporter'
     static_configs:
-      - targets: ['mon-1:9100']
+      - targets: ['mon-1:9100', 'mon-2:9100']
 
   - job_name: 'telegraf'
     static_configs:
-      - targets: ['mon-1:9273']
+      - targets: ['mon-1:9273', 'mon-2:9273']
 
   - job_name: 'm3'
     static_configs:
@@ -195,14 +195,64 @@ sudo systemctl enable telegraf
 usermod -aG docker telegraf
 SCRIPT
 
+# Script to configure server mon-2
+$mon2 = <<-SCRIPT
+sudo yum -y install epel-release
+sudo yum -y install python-pip
+sudo yum -y install python-devel
+sudo yum -y install wget curl
+sudo pip install --upgrade pip
+sudo pip install jsondiff
+sudo pip install pyyamlA
+
+# install node_exporter
+export NODE_EXPORTER_VERSION=0.18.1
+wget -q https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz
+tar -xzf node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz
+sudo mv node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64/node_exporter /usr/local/bin/
+sudo cat << EOT > /etc/systemd/system/node_exporter.service
+[Unit]
+Description=Node Exporter
+After=network.target
+
+[Service]
+User=prometheus
+Group=prometheus
+Type=simple
+ExecStart=/usr/local/bin/node_exporter
+
+[Install]
+WantedBy=multi-user.target
+EOT
+sudo systemctl daemon-reload
+sudo systemctl start node_exporter
+sudo systemctl enable node_exporter
+
+# install telegraf
+sudo cat << EOT > /etc/yum.repos.d/influxdb.repo
+[influxdb]
+name = InfluxDB Repository - RHEL 7
+baseurl = https://repos.influxdata.com/rhel/7/x86_64/stable
+enabled = 1
+gpgcheck = 1
+gpgkey = https://repos.influxdata.com/influxdb.key
+EOT
+sudo yum -y install telegraf
+sudo telegraf --input-filter cpu:disk:diskio:kernel:mem:processes:net:swap:system:docker:kernel_vmstat:netstat --output-filter prometheus_client config > /etc/telegraf/telegraf.conf
+sudo systemctl start telegraf
+sudo systemctl enable telegraf
+usermod -aG docker telegraf
+SCRIPT
+
 # Manager Servers
 managers = [
-  { :hostname => 'mon-lts', :ip => '192.168.77.2', :ram => 8192, :cpus => 4, :box => "bento/centos-7.7" }
+  { :hostname => 'mon-lts', :ip => '192.168.77.2', :ram => 6144, :cpus => 4, :box => "bento/centos-7.7" }
 ]
 
 # Monitoring Servers
 servers = [
-  { :hostname => 'mon-1', :ip => '192.168.77.10', :ram => 2048, :cpus => 2, :box => "bento/centos-7.7" }
+  { :hostname => 'mon-1', :ip => '192.168.77.10', :ram => 1024, :cpus => 2, :box => "bento/centos-7.7" }
+  { :hostname => 'mon-2', :ip => '192.168.77.20', :ram => 1024, :cpus => 2, :box => "bento/centos-7.7" }
 ]
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
@@ -250,7 +300,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       end
 
       # Get M3DB docker image
-      config.vm.provision "shell", inline: $script1
+      config.vm.provision "shell", inline: $manager
     end
   end
 
@@ -281,8 +331,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         ]
       end
 
-      # Configure monitoring stack
-      config.vm.provision "shell", inline: $script2
+      # Configure monitoring stack for mon-1
+      if server[:hostname] == "mon-1"
+        config.vm.provision "shell", inline: $mon1
+      end
     end
   end
 end

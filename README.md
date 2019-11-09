@@ -1,8 +1,8 @@
 # Monitoring Stack
 
-This project deploys, using vagrant, 2 servers with Prometheus, Telegraf, M3DB, Grafana, and some more components.
+This project deploys, using vagrant, servers with Prometheus, Telegraf, M3DB, Grafana, and some more components.
 
-This can be used to test configurations.
+This can be used to test configurations for both Prometheus and Grafana.
 
 ## Prometheus
 
