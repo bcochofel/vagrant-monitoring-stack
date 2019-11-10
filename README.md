@@ -12,6 +12,10 @@ This can be used to test configurations for both Prometheus and Grafana.
 Prometheus is configured to scrape metrics from telegraf, node_exporter, grafana and m3db.
 The configuration also has the remote read/write option configured for m3db.
 
+## Stress Tests
+
+You can run ```stress-ng``` to test the prometheus alerts.
+
 # Requirements
 
 * Linux, Windows or macOS host with at least 16GB RAM (depends on the project)
@@ -33,3 +37,4 @@ vagrant up
 - [M3DB](https://www.m3db.io/)
 - [Telegraf](https://www.influxdata.com/time-series-platform/telegraf/)
 - [Grafana](https://grafana.com/)
+- [Stress-ng](https://www.cyberciti.biz/faq/stress-test-linux-unix-server-with-stress-ng/)

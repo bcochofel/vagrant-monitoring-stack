@@ -11,6 +11,8 @@ TELEGRAF_VERSION = "1.12.4"
 
 # Script to get M3DB + Grafana
 $manager = <<-SCRIPT
+# install packages
+yum -y install stress stress-ng vim
 # m3db docker
 docker pull quay.io/m3db/m3dbnode:latest
 docker run -d -p 7201:7201 -p 7203:7203 -p 9003:9003 \
@@ -70,16 +72,16 @@ $mon1 = <<-SCRIPT
 sudo yum -y install epel-release
 sudo yum -y install python-pip
 sudo yum -y install python-devel
-sudo yum -y install wget curl stress
+sudo yum -y install wget curl stress stress-ng vim
 sudo pip install --upgrade pip
 sudo pip install jsondiff
 sudo pip install pyyamlA
 
 # install/configure prometheus
 sudo useradd --no-create-home --shell /bin/false prometheus
-sudo mkdir /etc/prometheus
+sudo mkdir -p /etc/prometheus/rules
 sudo mkdir /var/lib/prometheus
-sudo chown prometheus:prometheus /etc/prometheus
+sudo chown prometheus:prometheus /etc/prometheus -R
 sudo chown prometheus:prometheus /var/lib/prometheus
 export PROMETHEUS_VERSION=2.13.1
 cd /tmp
@@ -92,6 +94,50 @@ sudo chown prometheus:prometheus /usr/local/bin/prometheus
 sudo chown prometheus:prometheus /usr/local/bin/promtool
 sudo cp -r prometheuspackage/consoles /etc/prometheus
 sudo cp -r prometheuspackage/console_libraries /etc/prometheus
+sudo cat << EOT > /etc/prometheus/node_exporter-targets.json
+[
+  {
+    "labels": {
+      "env": "tst",
+      "host": "mon-1"
+    },
+    "targets": [
+      "mon-1:9100"
+    ]
+  },
+  {
+    "labels": {
+      "env": "dev",
+      "host": "mon-2"
+    },
+    "targets": [
+      "mon-2:9100"
+    ]
+  }
+]
+EOT
+sudo cat << EOT > /etc/prometheus/telegraf-targets.json
+[
+  {
+    "labels": {
+      "env": "tst",
+      "host": "mon-1"
+    },
+    "targets": [
+      "mon-1:9273"
+    ]
+  },
+  {
+    "labels": {
+      "env": "dev",
+      "host": "mon-2"
+    },
+    "targets": [
+      "mon-2:9273"
+    ]
+  }
+]
+EOT
 sudo cat << EOT > /etc/prometheus/prometheus.yml
 global:
   scrape_interval: 10s
@@ -108,25 +154,34 @@ rule_files:
   - "rules/*.rules.yml"
 
 remote_read:
-  - url: "http://mon-lts:7201/api/v1/prom/remote/read"
+  - url: 'http://mon-lts:7201/api/v1/prom/remote/read'
     # To test reading even when local Prometheus has the data
     read_recent: true
 remote_write:
-  - url: "http://mon-lts:7201/api/v1/prom/remote/write"
+  - url: 'http://mon-lts:7201/api/v1/prom/remote/write'
 
 scrape_configs:
-  - job_name: 'prometheus_master'
-    scrape_interval: 5s
+  # prometheus targets
+  - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
+  
+  # alertmanager targets
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['localhost:9093']
 
+  # node_exporter targets
   - job_name: 'node_exporter'
-    static_configs:
-      - targets: ['mon-1:9100', 'mon-2:9100']
+    file_sd_configs:
+      - files:
+        - /etc/prometheus/node_exporter-targets.json
 
+  # telegraf targets
   - job_name: 'telegraf'
-    static_configs:
-      - targets: ['mon-1:9273', 'mon-2:9273']
+    file_sd_configs:
+      - files:
+        - /etc/prometheus/telegraf-targets.json
 
   - job_name: 'm3'
     static_configs:
@@ -200,7 +255,7 @@ $mon2 = <<-SCRIPT
 sudo yum -y install epel-release
 sudo yum -y install python-pip
 sudo yum -y install python-devel
-sudo yum -y install wget curl stress
+sudo yum -y install wget curl stress stress-ng vim
 sudo pip install --upgrade pip
 sudo pip install jsondiff
 sudo pip install pyyamlA
