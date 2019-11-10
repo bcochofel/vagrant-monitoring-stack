@@ -140,13 +140,14 @@ sudo cat << EOT > /etc/prometheus/telegraf-targets.json
 EOT
 sudo cat << EOT > /etc/prometheus/prometheus.yml
 global:
-  scrape_interval: 10s
+  scrape_interval: 15s
+  evaluation_interval: 15s
 
 # Alertmanager configuration
-# alerting:
-#   alertmanagers:
-#   - static_configs:
-#       - targets: ['localhost:9093']
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets: ['localhost:9093']
 
 # Load rules once and periodically evaluate them according 
 # to the global 'evaluation_interval'.
@@ -210,6 +211,47 @@ EOT
 sudo systemctl daemon-reload
 sudo systemctl start prometheus
 sudo systemctl enable prometheus
+
+# install alertmanager
+export ALERTMANAGER_VERSION=0.19.0
+wget -q https://github.com/prometheus/alertmanager/releases/download/v${ALERTMANAGER_VERSION}/alertmanager-${ALERTMANAGER_VERSION}.linux-amd64.tar.gz
+tar -xzf alertmanager-${ALERTMANAGER_VERSION}.linux-amd64.tar.gz
+sudo mv alertmanager-${ALERTMANAGER_VERSION}.linux-amd64/alertmanager /usr/local/bin/
+sudo mv alertmanager-${ALERTMANAGER_VERSION}.linux-amd64/amtool /usr/local/bin/
+sudo chown prometheus:prometheus /usr/local/bin/alertmanager
+sudo chown prometheus:prometheus /usr/local/bin/amtool
+sudo mkdir /etc/alertmanager
+sudo cat << EOT > /etc/alertmanager/alertmanager.yml
+route:
+  group_by: ['alertname']
+  group_wait: 45s
+  group_interval: 10m
+  repeat_interval: 6h
+  receiver: 'first-responders'
+
+receivers:
+  - name: 'first-responders'
+EOT
+sudo chown prometheus:prometheus /etc/alertmanager -R
+sudo cat << EOT > /etc/systemd/system/alertmanager.service
+[Unit]
+Description=Alertmanager
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=prometheus
+Group=prometheus
+Type=simple
+WorkingDirectory=/etc/alertmanager/
+ExecStart=/usr/local/bin/alertmanager --config.file=/etc/alertmanager/alertmanager.yml --web.external-url http://mon-1:9093
+
+[Install]
+WantedBy=multi-user.target
+EOT
+sudo systemctl daemon-reload
+sudo systemctl start alertmanager
+sudo systemctl enable alertmanager
 
 # install node_exporter
 export NODE_EXPORTER_VERSION=0.18.1
