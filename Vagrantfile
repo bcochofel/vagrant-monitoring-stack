@@ -6,8 +6,17 @@
 # Vagrant variables
 VAGRANTFILE_API_VERSION = "2"
 
-# Telegraf version
-TELEGRAF_VERSION = "1.12.4"
+# Prometheus version
+PROMETHEUS_VERSION = "2.13.1"
+
+# Alertmanager version
+ALERTMANAGER_VERSION = "0.19.0"
+
+# Node exporter version
+NODE_EXPORTER_VERSION = "0.18.1"
+
+# SLACK API URL
+SLACK_API_URL = ""
 
 # Script to get M3DB + Grafana
 $manager = <<-SCRIPT
@@ -69,6 +78,11 @@ SCRIPT
 
 # Script to configure server mon-1
 $mon1 = <<-SCRIPT
+PROM_VER=${1:-'2.13.1'}
+AM_VER=${2:-'0.19.0'}
+NEXP_VER=${3:-'0.18.1'}
+SLACK_API_URL=${4:-'https://slack.com'}
+
 sudo yum -y install epel-release
 sudo yum -y install python-pip
 sudo yum -y install python-devel
@@ -83,7 +97,7 @@ sudo mkdir -p /etc/prometheus/rules
 sudo mkdir /var/lib/prometheus
 sudo chown prometheus:prometheus /etc/prometheus -R
 sudo chown prometheus:prometheus /var/lib/prometheus
-export PROMETHEUS_VERSION=2.13.1
+export PROMETHEUS_VERSION=${PROM_VER}
 cd /tmp
 wget -q https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VERSION}/prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz
 tar -xzf prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz
@@ -213,24 +227,71 @@ sudo systemctl start prometheus
 sudo systemctl enable prometheus
 
 # install alertmanager
-export ALERTMANAGER_VERSION=0.19.0
+export ALERTMANAGER_VERSION=${AM_VER}
 wget -q https://github.com/prometheus/alertmanager/releases/download/v${ALERTMANAGER_VERSION}/alertmanager-${ALERTMANAGER_VERSION}.linux-amd64.tar.gz
 tar -xzf alertmanager-${ALERTMANAGER_VERSION}.linux-amd64.tar.gz
 sudo mv alertmanager-${ALERTMANAGER_VERSION}.linux-amd64/alertmanager /usr/local/bin/
 sudo mv alertmanager-${ALERTMANAGER_VERSION}.linux-amd64/amtool /usr/local/bin/
 sudo chown prometheus:prometheus /usr/local/bin/alertmanager
 sudo chown prometheus:prometheus /usr/local/bin/amtool
-sudo mkdir /etc/alertmanager
+sudo mkdir -p /etc/alertmanager/templates
 sudo cat << EOT > /etc/alertmanager/alertmanager.yml
+global:
+  slack_api_url: $SLACK_API_URL
+
 route:
-  group_by: ['alertname']
-  group_wait: 45s
-  group_interval: 10m
-  repeat_interval: 6h
-  receiver: 'first-responders'
+  group_by: [alertname]
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'slack-notifications'
+  routes:
+    - match:
+        team: linux-systems
+      receiver: 'slack-notifications'
+
+# Inhibition rules allow to mute a set of alerts given that another alert is
+# firing.
+# We use this to mute any warning-level notifications if the same alert is 
+# already critical.
+inhibit_rules:
+- source_match:
+    severity: 'critical'
+  target_match:
+    severity: 'warning'
+  # Apply inhibition if the alertname is the same.
+  equal: ['alertname']
 
 receivers:
-  - name: 'first-responders'
+- name: 'slack-notifications'
+  slack_configs:
+  - channel: '#alertmanager'
+    send_resolved: true
+    title: '{{ template "slack.default.title" . }}'
+    text: '{{ template "slack.default.text" . }}'
+
+templates:
+  - '/etc/alertmanager/templates/default.tmpl'
+EOT
+sudo cat << EOT > /etc/alertmanager/templates/default.tmpl
+{{ define "slack.default.title" -}}
+    {{- if .CommonAnnotations.summary -}}
+        {{- .CommonAnnotations.summary -}}
+    {{- else -}}
+        {{- with index .Alerts 0 -}}
+            {{- .Annotations.summary -}}
+        {{- end -}}
+    {{- end -}}
+{{- end }}
+{{ define "slack.default.text" -}}
+    {{- if .CommonAnnotations.description -}}
+        {{- .CommonAnnotations.description -}}
+    {{- else -}}
+        {{- range $i, $alert := .Alerts }}
+            {{- "\n" -}} {{- .Annotations.description -}}
+        {{- end -}}
+    {{- end -}}
+{{- end }}
 EOT
 sudo chown prometheus:prometheus /etc/alertmanager -R
 sudo cat << EOT > /etc/systemd/system/alertmanager.service
@@ -254,7 +315,7 @@ sudo systemctl start alertmanager
 sudo systemctl enable alertmanager
 
 # install node_exporter
-export NODE_EXPORTER_VERSION=0.18.1
+export NODE_EXPORTER_VERSION=${NEXP_VER}
 wget -q https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz
 tar -xzf node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz
 sudo mv node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64/node_exporter /usr/local/bin/
@@ -294,6 +355,8 @@ SCRIPT
 
 # Script to configure server mon-2
 $mon2 = <<-SCRIPT
+NEXP_VER=${1:-'0.18.1'}
+
 sudo yum -y install epel-release
 sudo yum -y install python-pip
 sudo yum -y install python-devel
@@ -304,7 +367,7 @@ sudo pip install pyyamlA
 
 # install node_exporter
 sudo useradd --no-create-home --shell /bin/false prometheus
-export NODE_EXPORTER_VERSION=0.18.1
+export NODE_EXPORTER_VERSION=${NEXP_VER}
 wget -q https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz
 tar -xzf node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz
 sudo mv node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64/node_exporter /usr/local/bin/
@@ -431,11 +494,20 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
       # Configure monitoring stack for mon-1
       if server[:hostname] == "mon-1"
-        config.vm.provision "shell", inline: $mon1
+        config.vm.provision "shell" do |s|
+          s.inline = $mon1
+          s.args = [PROMETHEUS_VERSION, 
+                   ALERTMANAGER_VERSION, 
+                   NODE_EXPORTER_VERSION, 
+                   SLACK_API_URL]
+        end
       end
       # Configure monitoring stack for mon-2
       if server[:hostname] == "mon-2"
-        config.vm.provision "shell", inline: $mon2
+        config.vm.provision "shell" do |s|
+          s.inline = $mon2
+          s.args = [NODE_EXPORTER_VERSION]
+        end
       end
     end
   end

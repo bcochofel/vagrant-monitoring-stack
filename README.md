@@ -16,6 +16,10 @@ The configuration also has the remote read/write option configured for m3db.
 
 You can run ```stress-ng``` to test the prometheus alerts.
 
+## Alertmanager
+
+Replace ```SLACK_API_URL``` variable accordingly.
+
 # Requirements
 
 * Linux, Windows or macOS host with at least 16GB RAM (depends on the project)
