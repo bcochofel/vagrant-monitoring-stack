@@ -18,7 +18,7 @@ You can run ```stress-ng``` to test the prometheus alerts.
 
 ## Alertmanager
 
-Replace ```SLACK_API_URL``` variable accordingly.
+Add environment variable ```SLACK_API_URL``` with your token url for slack notifications.
 
 # Requirements
 
@@ -32,6 +32,7 @@ To create the servers execute the following commands:
 
 ```bash
 vagrant plugin install vagrant-hostmanager
+export SLACK_API_URL=<api token>
 vagrant up
 ```
 

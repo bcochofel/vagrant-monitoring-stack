@@ -16,7 +16,7 @@ ALERTMANAGER_VERSION = "0.19.0"
 NODE_EXPORTER_VERSION = "0.18.1"
 
 # SLACK API URL
-SLACK_API_URL = ""
+SLACK_API_URL = ENV["SLACK_API_URL"] || 'https://hooks.slack.com/services'
 
 # Script to get M3DB + Grafana
 $manager = <<-SCRIPT
@@ -81,7 +81,7 @@ $mon1 = <<-SCRIPT
 PROM_VER=${1:-'2.13.1'}
 AM_VER=${2:-'0.19.0'}
 NEXP_VER=${3:-'0.18.1'}
-SLACK_API_URL=${4:-'https://slack.com'}
+SLACK_API_URL=${4:-'https://hooks.slack.com/services'}
 
 sudo yum -y install epel-release
 sudo yum -y install python-pip
@@ -287,8 +287,8 @@ sudo cat << EOT > /etc/alertmanager/templates/default.tmpl
     {{- if .CommonAnnotations.description -}}
         {{- .CommonAnnotations.description -}}
     {{- else -}}
-        {{- range $i, $alert := .Alerts }}
-            {{- "\n" -}} {{- .Annotations.description -}}
+        {{- range \\$i, \\$alert := .Alerts }}
+            {{- "\\n" -}} {{- .Annotations.description -}}
         {{- end -}}
     {{- end -}}
 {{- end }}
