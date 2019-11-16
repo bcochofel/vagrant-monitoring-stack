@@ -36,6 +36,10 @@ export SLACK_API_URL=<api token>
 vagrant up
 ```
 
+On Windows take a look at: 
+
+[Vagrant hostmanager plugin](https://github.com/devopsgroup-io/vagrant-hostmanager)
+
 # External Links
 
 - [Prometheus](https://prometheus.io/)
