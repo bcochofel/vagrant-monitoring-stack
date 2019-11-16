@@ -21,7 +21,7 @@ SLACK_API_URL = ENV["SLACK_API_URL"] || 'https://hooks.slack.com/services'
 # Script to get M3DB + Grafana
 $manager = <<-SCRIPT
 # install packages
-yum -y install stress stress-ng vim
+yum -y install stress stress-ng vim git
 # m3db docker
 docker pull quay.io/m3db/m3dbnode:latest
 docker run -d -p 7201:7201 -p 7203:7203 -p 9003:9003 \
@@ -86,10 +86,11 @@ SLACK_API_URL=${4:-'https://hooks.slack.com/services'}
 sudo yum -y install epel-release
 sudo yum -y install python-pip
 sudo yum -y install python-devel
-sudo yum -y install wget curl stress stress-ng vim
+sudo yum -y install wget curl stress stress-ng vim git
 sudo pip install --upgrade pip
+sudo pip install docker-compose
+sudo pip install ansible
 sudo pip install jsondiff
-sudo pip install pyyamlA
 
 # install/configure prometheus
 sudo useradd --no-create-home --shell /bin/false prometheus
@@ -360,10 +361,11 @@ NEXP_VER=${1:-'0.18.1'}
 sudo yum -y install epel-release
 sudo yum -y install python-pip
 sudo yum -y install python-devel
-sudo yum -y install wget curl stress stress-ng vim
+sudo yum -y install wget curl stress stress-ng vim git
 sudo pip install --upgrade pip
+sudo pip install docker-compose
+sudo pip install ansible
 sudo pip install jsondiff
-sudo pip install pyyamlA
 
 # install node_exporter
 sudo useradd --no-create-home --shell /bin/false prometheus
@@ -403,6 +405,12 @@ sudo telegraf --input-filter cpu:disk:diskio:kernel:mem:processes:net:swap:syste
 sudo systemctl start telegraf
 sudo systemctl enable telegraf
 usermod -aG docker telegraf
+
+mkdir projects
+cd projects
+git clone https://github.com/bcochofel/prometheus-configuration.git
+cd prometheus-configuration
+docker-compose up
 SCRIPT
 
 # Manager Servers
