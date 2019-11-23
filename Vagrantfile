@@ -113,7 +113,7 @@ sudo cat << EOT > /etc/prometheus/node_exporter-targets.json
 [
   {
     "labels": {
-      "env": "tst",
+      "environment": "tst",
       "host": "mon-1"
     },
     "targets": [
@@ -122,7 +122,7 @@ sudo cat << EOT > /etc/prometheus/node_exporter-targets.json
   },
   {
     "labels": {
-      "env": "dev",
+      "environment": "dev",
       "host": "mon-2"
     },
     "targets": [
@@ -135,7 +135,7 @@ sudo cat << EOT > /etc/prometheus/telegraf-targets.json
 [
   {
     "labels": {
-      "env": "tst",
+      "environment": "tst",
       "host": "mon-1"
     },
     "targets": [
@@ -144,7 +144,7 @@ sudo cat << EOT > /etc/prometheus/telegraf-targets.json
   },
   {
     "labels": {
-      "env": "dev",
+      "environment": "dev",
       "host": "mon-2"
     },
     "targets": [
