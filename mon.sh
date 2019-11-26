@@ -15,9 +15,11 @@ sudo yum -y install bind-utils
 sudo yum -y install wget curl stress stress-ng vim git tree jq
 sudo pip3.6 install --upgrade pip
 pip3.6 install docker-compose --user
-pip3.6 install ansible --user
-pip3.6 install jsondiff --user
-pip3.6 install PyYAML --user
+
+# install weave network
+sudo curl -L git.io/weave -o /usr/local/bin/weave
+sudo chmod a+x /usr/local/bin/weave
+sudo /usr/local/bin/weave launch
 
 # install node_exporter
 sudo useradd --no-create-home --shell /bin/false prometheus

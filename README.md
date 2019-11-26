@@ -7,6 +7,8 @@ This project deploys, using vagrant, servers with Prometheus, Telegraf, M3DB, Gr
 
 This can be used to test configurations for both Prometheus and Grafana.
 
+It uses Weave Network Plugin for Docker to be able to communicate between hosts.
+
 ## Prometheus
 
 Prometheus is configured to scrape metrics from telegraf, node_exporter, grafana and m3db.
@@ -47,3 +49,4 @@ On Windows take a look at:
 - [Telegraf](https://www.influxdata.com/time-series-platform/telegraf/)
 - [Grafana](https://grafana.com/)
 - [Stress-ng](https://www.cyberciti.biz/faq/stress-test-linux-unix-server-with-stress-ng/)
+- [Weave Net](https://www.weave.works/oss/net/)
