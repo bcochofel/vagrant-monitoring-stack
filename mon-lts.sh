@@ -18,6 +18,10 @@ pip3.6 install ansible --user
 pip3.6 install jsondiff --user
 pip3.6 install PyYAML --user
 
+# install weave network
+sudo curl -L git.io/weave -o /usr/local/bin/weave
+sudo chmod a+x /usr/local/bin/weave
+
 # m3db docker
 docker pull quay.io/m3db/m3dbnode:latest
 docker run -d -p 7201:7201 -p 7203:7203 -p 9003:9003 \

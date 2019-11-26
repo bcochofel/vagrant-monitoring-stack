@@ -19,7 +19,6 @@ pip3.6 install docker-compose --user
 # install weave network
 sudo curl -L git.io/weave -o /usr/local/bin/weave
 sudo chmod a+x /usr/local/bin/weave
-sudo /usr/local/bin/weave launch
 
 # install node_exporter
 sudo useradd --no-create-home --shell /bin/false prometheus
