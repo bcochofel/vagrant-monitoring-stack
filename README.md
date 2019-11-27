@@ -7,8 +7,6 @@ This project deploys, using vagrant, servers with Prometheus, Telegraf, M3DB, Gr
 
 This can be used to test configurations for both Prometheus and Grafana.
 
-It uses Weave Network Plugin for Docker to be able to communicate between hosts.
-
 ## Prometheus
 
 Prometheus is configured to scrape metrics from telegraf, node_exporter, grafana and m3db.
@@ -34,13 +32,16 @@ To create the servers execute the following commands:
 
 ```bash
 vagrant plugin install vagrant-hostmanager
-export SLACK_API_URL=<api token>
 vagrant up
 ```
 
 On Windows take a look at: 
 
 [Vagrant hostmanager plugin](https://github.com/devopsgroup-io/vagrant-hostmanager)
+
+# TODO
+
+- Alerta HA configuration
 
 # External Links
 
