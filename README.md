@@ -39,12 +39,131 @@ On Windows take a look at:
 
 [Vagrant hostmanager plugin](https://github.com/devopsgroup-io/vagrant-hostmanager)
 
+# High Availability
+
+If you want to deploy everything with High Availability you just need to change some files.
+When creating both mon-1 and mon-2 servers the provisioning executes ```git clone``` of the prometheus config repo
+under ```/home/vagrant/projects/prometheus-configuration```. In order to have HA change the following files (relative to repo dir):
+
+- docker-compose.yml
+- prometheus/prometheus.yml
+- karma/karma.yml
+- grafana/config.grafana
+
+You need to change this files on both mon-1 and mon-2.
+
+## docker-compose.yml
+
+Under ```alertmanager``` section change the line:
+
+```bash
+#      - '--cluster.peer=alertmanager2:9094'
+```
+
+to (for mon-1)
+
+```bash
+      - '--cluster.peer=mon-2:9094'
+```
+
+and (for mon-2)
+
+```bash
+      - '--cluster.peer=mon-1:9094'
+```
+
+Uncomment the line (on both mon-1 and mon-2):
+
+```bash
+#      - 9094:9094
+```
+
+## prometheus/prometheus.yml
+
+Change the alerting section from:
+
+```bash
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      - alertmanager:9093
+#      - alertmanager2:9093
+```
+
+to (on both mon-1 and mon-2):
+
+```bash
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      - mon-1:9093
+      - mon-2:9093
+```
+
+Uncomment remote read/write block and change the server
+At the end the block should look like this:
+
+```bash
+# remote read/write to/from M3DB
+remote_read:
+  - url: 'http://mon-lts:7201/api/v1/prom/remote/read'
+    # to test reading even when local Prometheus has the data
+    read_recent: true
+remote_write:
+  - url: 'http://mon-lts:7201/api/v1/prom/remote/write'
+```
+
+Change the targets on every job to scrape from both mon-1 and mon-2, except for the m3.
+The m3 job should be uncommented and change the m3db-server to mon-lts.
+
+## karma/karma.yml
+
+Change the file from (on both mon-1 and mon-2):
+
+```bash
+alertmanager:
+  interval: 30s
+  servers:
+    - name: alertmanager1
+      uri: http://alertmanager:9093
+      timeout: 20s
+      proxy: true
+#    - name: alertmanager2
+#      uri: http://alertmanager2:9093
+#      timeout: 20s
+#      proxy: true
+```
+
+to:
+
+```bash
+alertmanager:
+  interval: 30s
+  servers:
+    - name: alertmanager1
+      uri: http://mon-1:9093
+      timeout: 20s
+      proxy: true
+    - name: alertmanager2
+      uri: http://mon-2:9093
+      timeout: 20s
+      proxy: true
+```
+
+## grafana/config.grafana
+
+Change the variables PROM_SERVER_ADDR and PROM_SERVER_PORT to mon-lts and 7201 respectively.
+
 # TODO
 
+- Grafana Provisioning
 - Alerta HA configuration
 
 # External Links
 
+- [Prometheus Config Repo](https://github.com/bcochofel/prometheus-configuration)
 - [Prometheus](https://prometheus.io/)
 - [M3DB](https://www.m3db.io/)
 - [Telegraf](https://www.influxdata.com/time-series-platform/telegraf/)
