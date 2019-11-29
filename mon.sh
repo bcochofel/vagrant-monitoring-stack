@@ -2,19 +2,18 @@
 
 NEXP_VER=${1:-'0.18.1'}
 
-sudo yum -y install epel-release
-sudo yum -y install yum-utils
-sudo yum -y groupinstall development
-sudo yum -y install https://centos7.iuscommunity.org/ius-release.rpm
-sudo yum -y install python36u
-sudo yum -y install python36u-pip
-sudo yum -y install python36u-devel
-sudo yum -y install ca-certificates
-sudo yum -y install sshpass
-sudo yum -y install bind-utils
-sudo yum -y install wget curl stress stress-ng vim git tree jq
-sudo pip3.6 install --upgrade pip
-pip3.6 install docker-compose --user
+sudo yum -q -y install epel-release
+sudo yum -q -y install yum-utils
+sudo yum -q -y groupinstall development
+sudo yum -q -y install python python-pip python-dev
+sudo yum -q -y install https://centos7.iuscommunity.org/ius-release.rpm
+sudo yum -q -y install python36u
+sudo yum -q -y install python36u-pip
+sudo yum -q -y install python36u-devel
+sudo yum -q -y install ca-certificates
+sudo yum -q -y install sshpass
+sudo yum -q -y install bind-utils
+sudo yum -q -y install wget curl stress stress-ng vim git tree jq
 
 # install weave network
 sudo curl -L git.io/weave -o /usr/local/bin/weave

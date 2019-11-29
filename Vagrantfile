@@ -110,6 +110,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         s.path = "mon.sh"
         s.args = [NODE_EXPORTER_VERSION]
       end
+
+      # Configure with ansible
+      config.vm.provision "playbook", type: "ansible" do |ansible|
+        ansible.compatibility_mode = "auto"
+        ansible.config_file = "ansible/ansible.cfg"
+        ansible.playbook = "ansible/playbook.yml"
+        ansible.limit = "mon-1,mon-2"
+      end
     end
   end
 end

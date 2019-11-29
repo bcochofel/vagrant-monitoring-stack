@@ -1,22 +1,17 @@
 #!/bin/bash
 
 # install packages
-sudo yum -y install epel-release
-sudo yum -y install yum-utils
-sudo yum -y groupinstall development
-sudo yum -y install https://centos7.iuscommunity.org/ius-release.rpm
-sudo yum -y install python36u
-sudo yum -y install python36u-pip
-sudo yum -y install python36u-devel
-sudo yum -y install ca-certificates
-sudo yum -y install sshpass
-sudo yum -y install bind-utils
-sudo yum -y install wget curl stress stress-ng vim git tree jq
-sudo pip3.6 install --upgrade pip
-pip3.6 install docker-compose --user
-pip3.6 install ansible --user
-pip3.6 install jsondiff --user
-pip3.6 install PyYAML --user
+sudo yum -q -y install epel-release
+sudo yum -q -y install yum-utils
+sudo yum -q -y groupinstall development
+sudo yum -q -y install https://centos7.iuscommunity.org/ius-release.rpm
+sudo yum -q -y install python36u
+sudo yum -q -y install python36u-pip
+sudo yum -q -y install python36u-devel
+sudo yum -q -y install ca-certificates
+sudo yum -q -y install sshpass
+sudo yum -q -y install bind-utils
+sudo yum -q -y install wget curl stress stress-ng vim git tree jq
 
 # install weave network
 sudo curl -L git.io/weave -o /usr/local/bin/weave
@@ -30,7 +25,7 @@ sleep 30
 curl -X POST http://localhost:7201/api/v1/database/create -d '{
   "type": "local",
   "namespaceName": "default",
-  "retentionTime": "365d"
+  "retentionTime": "48h"
 }' &>/dev/null
 
 # m3db docker service
@@ -70,7 +65,7 @@ sslcacert=/etc/pki/tls/certs/ca-bundle.crt
 EOT
 
 # install grafana
-sudo yum install grafana -y
+sudo yum -q -y install grafana
 sudo systemctl daemon-reload
 sudo systemctl start grafana-server
 sudo systemctl enable grafana-server.service

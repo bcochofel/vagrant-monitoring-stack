@@ -1,0 +1,12 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: Install pip modules
+      pip:
+        executable: pip3.6
+        name:
+          - jsondiff
+          - pyyaml
+          - requests
+          - docker-compose
