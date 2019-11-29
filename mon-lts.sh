@@ -30,7 +30,7 @@ sleep 30
 curl -X POST http://localhost:7201/api/v1/database/create -d '{
   "type": "local",
   "namespaceName": "default",
-  "retentionTime": "12h"
+  "retentionTime": "365d"
 }' &>/dev/null
 
 # m3db docker service
