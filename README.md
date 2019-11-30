@@ -28,6 +28,8 @@ Add environment variable ```SLACK_API_URL``` with your token url for slack notif
 
 # Installation
 
+## Deploy servers
+
 To create the servers execute the following commands:
 
 ```bash
@@ -39,16 +41,28 @@ On Windows take a look at:
 
 [Vagrant hostmanager plugin](https://github.com/devopsgroup-io/vagrant-hostmanager)
 
+## Deploy monitoring stack
+
+```bash
+vagrant ssh mon-1
+cd projects/prometheus-configuration
+# if you want to send notifications to a slack channel change the file
+# alertmanager/alertmanager.yml
+docker-compose up -d
+```
+
 # High Availability
 
 If you want to deploy everything with High Availability you just need to change some files.
 When creating both mon-1 and mon-2 servers the provisioning executes ```git clone``` of the prometheus config repo
-under ```/home/vagrant/projects/prometheus-configuration```. In order to have HA change the following files (relative to repo dir):
+under ```/home/vagrant/projects/prometheus-configuration```.
+In order to have HA change the following files (relative to repo dir):
 
 - docker-compose.yml
 - prometheus/prometheus.yml
 - karma/karma.yml
 - grafana/config.grafana
+- alertmanager/alertmanager.yml
 
 You need to change this files on both mon-1 and mon-2.
 
@@ -155,6 +169,10 @@ alertmanager:
 ## grafana/config.grafana
 
 Change the variables PROM_SERVER_ADDR and PROM_SERVER_PORT to mon-lts and 7201 respectively.
+
+## alertmanager/alertmanager.yml
+
+Change the configuration to send notifications to Slack (or something else).
 
 # TODO
 
