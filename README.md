@@ -174,9 +174,17 @@ alertmanager:
       proxy: true
 ```
 
+Karma can be accessed on both mon-1 and mon-2 so you can use LB to manage HA.
+
 ## grafana/config.grafana
 
-Change the variables PROM_SERVER_ADDR and PROM_SERVER_PORT to mon-lts and 7201 respectively.
+You can configure Grafan two ways:
+
+- each grafana configured with datasource to the prometheus running on the same server;
+- each grafana configured with datasource to the M3DB LTS;
+
+For the first option change PROM_SERVER_ADDR to mon-1 or mon-2 respectively.
+For the second change the variables PROM_SERVER_ADDR and PROM_SERVER_PORT to mon-lts and 7201 respectively.
 
 ## alertmanager/alertmanager.yml
 
@@ -185,7 +193,9 @@ Change the configuration to send notifications to Slack (or something else).
 # TODO
 
 - Grafana Provisioning
-- Alerta HA configuration
+- Karma authentication
+- Alerta Metrics and authentication
+- M3DB retention period
 
 # External Links
 
