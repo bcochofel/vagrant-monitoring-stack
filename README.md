@@ -43,6 +43,14 @@ On Windows take a look at:
 
 ## Deploy monitoring stack
 
+The provisioning clones the prometheus repository with some configuration that can be used.
+This repository is under ```/home/vagrant/projects/prometheus-configuration```.
+Change to this directory and change env variables PROM_SERVER_ADDR and PROM_SERVER_PORT 
+on the file ```grafana/config.grafana``` to:
+
+- PROM_SERVER_ADDR: mon-1
+- PROM_SERVER_PORT: 9090
+
 ```bash
 vagrant ssh mon-1
 cd projects/prometheus-configuration
