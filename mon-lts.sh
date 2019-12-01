@@ -17,6 +17,15 @@ sudo yum -q -y install wget curl stress stress-ng vim git tree jq
 sudo curl -L git.io/weave -o /usr/local/bin/weave
 sudo chmod a+x /usr/local/bin/weave
 
+# set kernel configuration form M3DB
+sudo cat <<EOF > /etc/sysctl.d/m3db.conf
+vm.max_map_count=3000000
+vm.swappiness=1
+fs.file-max=3000000
+fs.nr_open=3000000
+EOF
+sudo sysctl -p
+
 # m3db docker
 docker pull quay.io/m3db/m3dbnode:latest
 docker run -d -p 7201:7201 -p 7203:7203 -p 9003:9003 \
