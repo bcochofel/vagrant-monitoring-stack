@@ -7,9 +7,9 @@ sudo yum -q -y install yum-utils
 sudo yum -q -y groupinstall development
 sudo yum -q -y install python python-pip python-dev
 sudo yum -q -y install https://centos7.iuscommunity.org/ius-release.rpm
-sudo yum -q -y install python36u
-sudo yum -q -y install python36u-pip
-sudo yum -q -y install python36u-devel
+sudo yum -q -y install python3
+sudo yum -q -y install python3-pip
+sudo yum -q -y install python3-devel
 sudo yum -q -y install ca-certificates
 sudo yum -q -y install sshpass
 sudo yum -q -y install bind-utils
